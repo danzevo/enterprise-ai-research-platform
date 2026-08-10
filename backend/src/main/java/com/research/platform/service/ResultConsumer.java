@@ -33,6 +33,13 @@ public class ResultConsumer {
 
         if (optionalTask.isPresent()) {
             ResearchTask task = optionalTask.get();
+
+            // 🌟 The Idempotency Check! 🌟
+            if("COMPLETED".equals(task.getStatus())) {
+                log.info("Task {} is already completed! Skipping duplicate message.", task.getId());
+                return; // Exit early, do not waste database CPU!
+            }
+
             task.setStatus("COMPLETED");
             task.setResultMarkdown(payload.getResultMarkdown());
             repository.save(task);
