@@ -27,6 +27,13 @@ services:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
 
+  redis:
+    image: redis:7
+    container_name: research_redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    
 volumes:
   rabbitmq_data:
   postgres_data:

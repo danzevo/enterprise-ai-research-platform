@@ -6,16 +6,21 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.time.Duration;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class ResultConsumer {
     private final ResearchTaskRepository repository;
-
+    private final StringRedisTemplate redisTemplate;
+    private final SimpMessagingTemplate messagingTemplate; // Inject WebSocket template
+    
     // A small internal DTO to catch the JSON that Python sends
     @Data
     public static class ResultPayload{
@@ -44,6 +49,17 @@ public class ResultConsumer {
             task.setResultMarkdown(payload.getResultMarkdown());
             repository.save(task);
 
+            // 1. Cache the result in Redis for 24 hours
+            redisTemplate.opsForValue().set(
+                "research:" + task.getTopic(),
+                payload.getResultMarkdown(),
+                Duration.ofHours(24)
+            );
+
+            // 2. Broadcast via WebSocket
+            // If we linked tasks to users, we would send this to "/topic/tasks/" + task.getUser().getId()
+            messagingTemplate.convertAndSend("/topic/tasks", task);
+            
             log.info("Task {} successfully updated to COMPLETED!", task.getId());
         } else {
             log.error("Received result for Task ID {}, but it doesn't exist in the database!", payload.getId());
