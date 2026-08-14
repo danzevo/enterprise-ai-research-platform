@@ -7,7 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
 @Table(name = "users")
@@ -23,7 +23,8 @@ public class User{
     @Column(unique = true, nullable = false)
     private String username;
 
-    @JsonIgnore
+    //jsonProperty with Allow reading the password from incoming JSON requests, but NEVER expose it in outgoing responses
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(nullable = false)
     private String password;
 
