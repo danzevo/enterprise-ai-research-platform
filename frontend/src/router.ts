@@ -13,7 +13,7 @@ const router = createRouter({
 })
 
 // Navigation Guard
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, _from, next) => {
     const token = localStorage.getItem('jwt_token')
 
     if (to.meta.requiresAuth && !token) {
